@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f8fafc;
+  --foreground: #111827;
 }
 
 @theme inline {
@@ -19,8 +19,59 @@
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    min-height: 100vh;
+    margin: 0;
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans), system-ui, sans-serif;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+}
+
+@layer utilities {
+  .page-container {
+    @apply mx-auto max-w-7xl px-6 sm:px-8 lg:px-12;
+  }
+
+  .section-spacing {
+    @apply py-12;
+  }
+
+  .eyebrow {
+    @apply text-sm font-semibold uppercase tracking-[0.24em] text-[#2563eb];
+  }
+
+  .primary-btn {
+    @apply inline-flex items-center justify-center rounded-full bg-[#2563eb] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#1d4ed8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563eb] focus-visible:ring-offset-2;
+  }
+
+  .card-panel {
+    @apply rounded-[1.75rem] border border-slate-200 bg-white shadow-sm;
+  }
+
+  .badge-pill {
+    @apply rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-700;
+  }
+
+  .spec-label {
+    @apply text-sm font-semibold text-slate-950;
+  }
+
+  .empty-state {
+    @apply rounded-[1.75rem] border border-slate-200 bg-slate-50 p-8 text-center text-sm text-slate-700 shadow-sm;
+  }
 }
