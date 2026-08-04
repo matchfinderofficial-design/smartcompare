@@ -105,7 +105,7 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
   const productsData = await getProductsBySlugs(slugs);
   const slugOrder = new Map(slugs.map((slug, index) => [slug, index]));
   const orderedProducts = productsData
-    .filter((product, index) => product.slug && slugOrder.has(product.slug))
+    .filter((product) => product.slug && slugOrder.has(product.slug))
     .sort((a, b) => (slugOrder.get(a.slug) ?? 0) - (slugOrder.get(b.slug) ?? 0));
 
   if (orderedProducts.length < 2) {

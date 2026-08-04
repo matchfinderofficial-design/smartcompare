@@ -1,0 +1,18 @@
+[
+  {
+    "category_slug": "dehumidifiers",
+    "brand_slug": "acme",
+    "name": "ACME Compact 200",
+    "model": "AC-200",
+    "slug": "acme-compact-200",
+    "manufacturer_url": "https://example.com/acme-compact-200",
+    "image_url": null,
+    "specifications": {
+      "power_watts": 200,
+      "capacity_liters_per_day": 10,
+      "weight_kg": 6
+    },
+    "source_name": "Example Import",
+    "source_url": "https://example.com/datasheet/acme-compact-200"
+  }
+]

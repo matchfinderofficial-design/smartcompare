@@ -247,7 +247,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             {product.manufacturer_url && (
               <div className="rounded-[2rem] border border-slate-200 bg-slate-50 p-6 sm:p-8">
                 <p className="text-sm text-slate-700">
-                  Check the manufacturer's website for the latest product information, warranty details and availability.
+                  Check the manufacturer&apos;s website for the latest product information, warranty details and availability.
                 </p>
                 <a
                   href={product.manufacturer_url}

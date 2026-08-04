@@ -84,7 +84,7 @@ export default function RunningCostCalculator({ powerWatts, className = "" }: Pr
       </div>
 
       <p className="mt-4 text-xs text-slate-500">
-        These are estimates based on the product's rated power. Actual consumption varies with operating mode, ambient humidity and duty cycle.
+        These are estimates based on the product&apos;s rated power. Actual consumption varies with operating mode, ambient humidity and duty cycle.
       </p>
     </div>
   );

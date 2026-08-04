@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "import-products": "ts-node --transpile-only scripts/import-products.ts",
+    "generate-content": "ts-node --transpile-only scripts/generate-product-content.ts",
+    "automate-products": "ts-node --transpile-only scripts/run-automation.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.0",
@@ -22,6 +25,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.3.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "ts-node": "^10"
   }
 }

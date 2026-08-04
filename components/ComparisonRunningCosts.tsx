@@ -1,5 +1,6 @@
 "use client";
 
+import type React from "react";
 import { useMemo, useState } from "react";
 import type { ProductWithBrand } from "@/lib/types";
 
@@ -37,6 +38,7 @@ export default function ComparisonRunningCosts({ products }: Props) {
   const minDaily = findMin("daily");
   const minMonthly = findMin("monthly");
   const minYearly = findMin("yearly");
+  const gridStyle = { '--cols': products.length } as React.CSSProperties;
 
   return (
     <div className="space-y-4">
@@ -75,7 +77,7 @@ export default function ComparisonRunningCosts({ products }: Props) {
 
       <div className="overflow-x-auto rounded-[1.5rem] border border-slate-200 bg-white">
         <div className="min-w-[700px]">
-          <div className="grid min-w-full grid-cols-[1.5fr_repeat(var(--cols,1),1fr)] gap-0 border-b border-slate-200 px-4 py-3 text-sm uppercase tracking-[0.18em] text-slate-600" style={{ ['--cols' as any]: products.length }}>
+          <div className="grid min-w-full grid-cols-[1.5fr_repeat(var(--cols,1),1fr)] gap-0 border-b border-slate-200 px-4 py-3 text-sm uppercase tracking-[0.18em] text-slate-600" style={{ '--cols': products.length } as React.CSSProperties}>
             <div className="py-2 font-semibold text-slate-950">Cost estimate</div>
             {products.map((p) => (
               <div key={p.slug} className="border-l border-slate-200 px-4 py-2">
@@ -84,7 +86,7 @@ export default function ComparisonRunningCosts({ products }: Props) {
             ))}
           </div>
 
-          <div className="grid min-w-full grid-cols-[1.5fr_repeat(var(--cols,1),1fr)] gap-0 px-4 py-4 text-sm text-slate-700" style={{ ['--cols' as any]: products.length }}>
+          <div className="grid min-w-full grid-cols-[1.5fr_repeat(var(--cols,1),1fr)] gap-0 px-4 py-4 text-sm text-slate-700" style={gridStyle}>
             <div className="pr-4 font-semibold text-slate-950">Estimated daily cost</div>
             {costs.map((c, i) => (
               <div key={`daily-${i}`} className={`border-l border-slate-200 px-4 py-4 ${minDaily.has(i) ? 'bg-emerald-50' : ''}`}>
@@ -93,7 +95,7 @@ export default function ComparisonRunningCosts({ products }: Props) {
             ))}
           </div>
 
-          <div className="grid min-w-full grid-cols-[1.5fr_repeat(var(--cols,1),1fr)] gap-0 px-4 py-4 text-sm text-slate-700" style={{ ['--cols' as any]: products.length }}>
+          <div className="grid min-w-full grid-cols-[1.5fr_repeat(var(--cols,1),1fr)] gap-0 px-4 py-4 text-sm text-slate-700" style={gridStyle}>
             <div className="pr-4 font-semibold text-slate-950">Estimated monthly cost</div>
             {costs.map((c, i) => (
               <div key={`month-${i}`} className={`border-l border-slate-200 px-4 py-4 ${minMonthly.has(i) ? 'bg-emerald-50' : ''}`}>
@@ -102,7 +104,7 @@ export default function ComparisonRunningCosts({ products }: Props) {
             ))}
           </div>
 
-          <div className="grid min-w-full grid-cols-[1.5fr_repeat(var(--cols,1),1fr)] gap-0 px-4 py-4 text-sm text-slate-700" style={{ ['--cols' as any]: products.length }}>
+          <div className="grid min-w-full grid-cols-[1.5fr_repeat(var(--cols,1),1fr)] gap-0 px-4 py-4 text-sm text-slate-700" style={gridStyle}>
             <div className="pr-4 font-semibold text-slate-950">Estimated annual cost</div>
             {costs.map((c, i) => (
               <div key={`year-${i}`} className={`border-l border-slate-200 px-4 py-4 ${minYearly.has(i) ? 'bg-emerald-50' : ''}`}>

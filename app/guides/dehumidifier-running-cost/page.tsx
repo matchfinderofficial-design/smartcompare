@@ -45,7 +45,7 @@ export default function GuidePage() {
 
           <div className="rounded-[1.25rem] border border-slate-200 bg-slate-50 p-6 text-sm text-slate-600">
             <p>
-              These are estimates based on the device's rated power. Actual energy use varies with operating mode, humidity,
+              These are estimates based on the device&apos;s rated power. Actual energy use varies with operating mode, humidity,
               and duty cycle. This page does not claim any specific tariff — the default £0.25/kWh is an example for
               demonstration only.
             </p>

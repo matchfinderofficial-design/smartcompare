@@ -5,7 +5,6 @@ export default function GlobalError({ error, reset }: { error: Error; reset: () 
   useEffect(() => {
     // Log to console for developers; do not expose details to users
     // Consider integrating a server-side error tracker in production
-    // eslint-disable-next-line no-console
     console.error(error);
   }, [error]);
 
