@@ -1,7 +1,7 @@
 import getSupabaseAdmin from "../lib/supabase-admin";
 
 const supabaseAdmin = getSupabaseAdmin();
-const DEFAULT_LIMIT = 10;
+const DEFAULT_LIMIT = 4;
 const GEMINI_MODEL = "gemini-2.5-flash";
 
 type ProductRow = {
@@ -290,7 +290,7 @@ async function main() {
       completed++;
 
       // Small delay to reduce API-rate pressure.
-      await new Promise((resolve) => setTimeout(resolve, 750));
+      await new Promise((resolve) => setTimeout(resolve, 15000));
     } catch (error) {
       failed++;
 
