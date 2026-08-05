@@ -66,8 +66,7 @@ const responseSchema = {
     "key_features",
     "pros",
     "cons",
-  ],
-  additionalProperties: false,
+  ]
 };
 
 function isPlaceholder(value?: string | null): boolean {
