@@ -59,6 +59,9 @@ async function main() {
     console.log("Generating missing product content");
     runNpmScript("generate-content");
 
+    console.log("Generating missing product images");
+    runNpmScript("generate-images");
+
     const { data: changed, error: changedError } = await supabaseAdmin
       .from("products")
       .select("id")
