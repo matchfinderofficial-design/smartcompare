@@ -6,6 +6,9 @@ export type ProductWithBrand = {
   brand: { name: string } | null;
   image_url?: string | null;
   manufacturer_url?: string | null;
+  suitable_for?: string[] | null;
+  pros?: string[] | null;
+  cons?: string[] | null;
   specifications: {
     extraction_litres_per_day?: number | null;
     noise_db?: number | null;

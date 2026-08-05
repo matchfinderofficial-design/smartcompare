@@ -11,7 +11,7 @@ async function getProductBySlug(slug: string) {
   const { data, error } = await supabase
     .from("products")
     .select(
-      "id,slug,name,model,image_url,manufacturer_url,specifications,brand:brands(name)"
+      "id,slug,name,model,image_url,manufacturer_url,suitable_for,pros,cons,specifications,brand:brands(name)"
     )
     .eq("slug", slug)
     .eq("active", true)
@@ -131,6 +131,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   ].filter((feature) => feature.enabled);
 
   const summaryText = buildSummary(product);
+  const suitableForItems = product.suitable_for ?? [];
+  const prosItems = product.pros ?? [];
+  const consItems = product.cons ?? [];
+  const hasSupplementaryCards =
+    suitableForItems.length > 0 || prosItems.length > 0 || consItems.length > 0;
 
   return (
     <main className="bg-[#f8fafc] text-slate-950">
@@ -240,6 +245,63 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                       <span className="font-semibold text-slate-900">{feature.label}:</span> {feature.description}
                     </p>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {hasSupplementaryCards && (
+              <div className="rounded-[2rem] border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#2563eb]">
+                  Product insights
+                </p>
+                <div className="mt-6 grid gap-4 sm:grid-cols-3">
+                  {suitableForItems.length > 0 && (
+                    <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-5">
+                      <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#2563eb]">
+                        Suitable for
+                      </p>
+                      <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-700">
+                        {suitableForItems.map((item, index) => (
+                          <li key={index} className="flex gap-3">
+                            <span className="mt-1 text-slate-400">•</span>
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {prosItems.length > 0 && (
+                    <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-5">
+                      <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#2563eb]">
+                        Pros
+                      </p>
+                      <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-700">
+                        {prosItems.map((item, index) => (
+                          <li key={index} className="flex gap-3">
+                            <span className="mt-1 text-emerald-600">✓</span>
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {consItems.length > 0 && (
+                    <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-5">
+                      <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#2563eb]">
+                        Cons
+                      </p>
+                      <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-700">
+                        {consItems.map((item, index) => (
+                          <li key={index} className="flex gap-3">
+                            <span className="mt-1 text-rose-600">✕</span>
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
