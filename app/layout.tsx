@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -14,21 +15,34 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
+export const metadataBase = new URL(siteUrl);
+
 export const metadata: Metadata = {
   title: "SmartCompare | Factual UK product comparisons",
   description: "Factual UK dehumidifier comparisons based on published manufacturer specifications.",
+  openGraph: {
+    title: "SmartCompare | Factual UK product comparisons",
+    description: "Factual UK dehumidifier comparisons based on published manufacturer specifications.",
+    url: siteUrl,
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "SmartCompare | Factual UK product comparisons",
+    description: "Factual UK dehumidifier comparisons based on published manufacturer specifications.",
+  },
+  alternates: {
+    canonical: siteUrl,
+  },
 };
 
-export const metadataBase = new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000");
-
-// Extend open graph defaults using the site URL fallback
-export const openGraph = {
-  title: metadata.title,
-  description: metadata.description,
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+type RootLayoutProps = {
+  children: ReactNode;
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html
       lang="en"

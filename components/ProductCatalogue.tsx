@@ -8,6 +8,14 @@ import type { ProductWithBrand } from "@/lib/types";
 
 type FilterKey = "bedrooms" | "laundry" | "quiet" | "energy" | "large" | "budget";
 
+type SortKey =
+  | "recommended"
+  | "quietest"
+  | "lowest-power"
+  | "highest-extraction"
+  | "largest-tank"
+  | "a-z";
+
 type FilterDefinition = {
   key: FilterKey;
   label: string;
@@ -22,6 +30,15 @@ const filters: FilterDefinition[] = [
   { key: "energy", label: "Low Energy", description: "Power 200 W or lower" },
   { key: "large", label: "Large Homes", description: "Extraction 20 L/day or higher" },
   { key: "budget", label: "Budget Picks", description: "Coming soon", disabled: true },
+];
+
+const sortOptions: { key: SortKey; label: string }[] = [
+  { key: "recommended", label: "Recommended" },
+  { key: "quietest", label: "Quietest" },
+  { key: "lowest-power", label: "Lowest power" },
+  { key: "highest-extraction", label: "Highest extraction" },
+  { key: "largest-tank", label: "Largest tank" },
+  { key: "a-z", label: "A–Z" },
 ];
 
 type ProductCatalogueProps = {
@@ -41,6 +58,7 @@ const filterDescriptions: Record<FilterKey, (product: ProductWithBrand) => boole
 const ProductCatalogue = ({ products, error }: ProductCatalogueProps) => {
   const [query, setQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<FilterKey | null>(null);
+  const [sortKey, setSortKey] = useState<SortKey>("recommended");
   const [selected, setSelected] = useState<string[]>([]);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -67,6 +85,56 @@ const ProductCatalogue = ({ products, error }: ProductCatalogueProps) => {
       return matchesSearch && matchesFilter;
     });
   }, [products, normalizedQuery, activeFilter]);
+
+  const sortedProducts = useMemo(() => {
+    const sorted = [...filteredProducts];
+
+    switch (sortKey) {
+      case "quietest":
+        sorted.sort((a, b) => {
+          const aValue = a.specifications?.noise_db ?? Infinity;
+          const bValue = b.specifications?.noise_db ?? Infinity;
+          return aValue - bValue;
+        });
+        break;
+      case "lowest-power":
+        sorted.sort((a, b) => {
+          const aValue = a.specifications?.power_watts ?? Infinity;
+          const bValue = b.specifications?.power_watts ?? Infinity;
+          return aValue - bValue;
+        });
+        break;
+      case "highest-extraction":
+        sorted.sort((a, b) => {
+          const aValue = a.specifications?.extraction_litres_per_day ?? -Infinity;
+          const bValue = b.specifications?.extraction_litres_per_day ?? -Infinity;
+          return bValue - aValue;
+        });
+        break;
+      case "largest-tank":
+        sorted.sort((a, b) => {
+          const aValue = a.specifications?.tank_capacity_litres ?? -Infinity;
+          const bValue = b.specifications?.tank_capacity_litres ?? -Infinity;
+          return bValue - aValue;
+        });
+        break;
+      case "a-z":
+        sorted.sort((a, b) => a.name.localeCompare(b.name, "en", { sensitivity: "base" }));
+        break;
+      case "recommended":
+      default:
+        sorted.sort((a, b) => {
+          const brandA = a.brand?.name ?? "";
+          const brandB = b.brand?.name ?? "";
+          const brandCompare = brandA.localeCompare(brandB, "en", { sensitivity: "base" });
+          if (brandCompare !== 0) return brandCompare;
+          return a.name.localeCompare(b.name, "en", { sensitivity: "base" });
+        });
+        break;
+    }
+
+    return sorted;
+  }, [filteredProducts, sortKey]);
 
   const selectProduct = (slug: string) => {
     setSelected((current) => {
@@ -183,6 +251,30 @@ const ProductCatalogue = ({ products, error }: ProductCatalogueProps) => {
             })}
           </div>
         </div>
+
+        <div className="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#2563eb]">Sort products</p>
+              <p className="mt-2 text-sm text-slate-600">Sort while keeping search and filters applied.</p>
+            </div>
+            <div>
+              <label htmlFor="product-sort" className="sr-only">Sort products</label>
+              <select
+                id="product-sort"
+                value={sortKey}
+                onChange={(event) => setSortKey(event.target.value as SortKey)}
+                className="w-full min-w-[220px] rounded-full border border-slate-200 bg-slate-50 px-5 py-4 text-sm font-semibold text-slate-900 outline-none outline-offset-2 transition focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/10 sm:w-auto"
+              >
+                {sortOptions.map((option) => (
+                  <option key={option.key} value={option.key}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
       </div>
 
       {error ? (
@@ -197,105 +289,102 @@ const ProductCatalogue = ({ products, error }: ProductCatalogueProps) => {
         </div>
       ) : (
         <div className="mt-6 grid gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-          {filteredProducts.map((product) => {
+          {sortedProducts.map((product) => {
             const isSelected = selected.includes(product.slug);
             return (
               <article
                 key={product.id}
-                className={`group flex h-full flex-col overflow-hidden rounded-[1.75rem] border bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg ${
+                className={`group flex h-full flex-col justify-between overflow-hidden rounded-[1.75rem] border bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg ${
                   isSelected ? "border-[#2563eb] ring-2 ring-[#2563eb]/10" : "border-slate-200"
                 }`}
               >
-              <div className="relative h-56 overflow-hidden bg-slate-100">
-                <ProductImage
-                  src={product.image_url ?? undefined}
-                  alt={`${product.brand?.name ?? ""} ${product.name}`.trim()}
-                  sizes="(max-width: 768px) 100vw, (max-width: 1279px) 50vw, 33vw"
-                  className="p-4"
-                />
-              </div>
-
-              <div className="space-y-4 p-6">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#2563eb]">
-                    {product.brand?.name ?? "Brand"}
-                  </p>
-                  <h3 className="mt-3 text-xl font-semibold text-slate-950">{product.name}</h3>
-                  <p className="text-sm text-slate-600">Model {product.model}</p>
-                </div>
-
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-3xl bg-slate-50 p-4">
-                    <p className="text-sm font-semibold text-slate-950">Extraction</p>
-                    <p className="mt-2 text-lg font-semibold text-slate-900">
-                      {product.specifications?.extraction_litres_per_day != null
-                        ? `${product.specifications.extraction_litres_per_day} L/day`
-                        : "N/A"}
-                    </p>
-                  </div>
-                  <div className="rounded-3xl bg-slate-50 p-4">
-                    <p className="text-sm font-semibold text-slate-950">Noise</p>
-                    <p className="mt-2 text-lg font-semibold text-slate-900">
-                      {product.specifications?.noise_db != null
-                        ? `${product.specifications.noise_db} dB`
-                        : "N/A"}
-                    </p>
-                  </div>
-                  <div className="rounded-3xl bg-slate-50 p-4">
-                    <p className="text-sm font-semibold text-slate-950">Power</p>
-                    <p className="mt-2 text-lg font-semibold text-slate-900">
-                      {product.specifications?.power_watts != null
-                        ? `${product.specifications.power_watts} W`
-                        : "N/A"}
-                    </p>
-                  </div>
-                  <div className="rounded-3xl bg-slate-50 p-4">
-                    <p className="text-sm font-semibold text-slate-950">Type</p>
-                    <p className="mt-2 text-lg font-semibold text-slate-900">
-                      {product.specifications?.dehumidifier_type ?? "N/A"}
-                    </p>
+                <div className="relative h-56 overflow-hidden rounded-[1.75rem] bg-slate-100 p-4">
+                  <div className="relative h-full w-full">
+                    <ProductImage
+                      src={product.image_url ?? undefined}
+                      alt={`${product.brand?.name ?? ""} ${product.name}`.trim()}
+                      sizes="(max-width: 768px) 100vw, (max-width: 1279px) 50vw, 33vw"
+                    />
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-2">
-                  {product.specifications?.laundry_mode && (
-                    <span className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-700">
-                      Laundry mode
-                    </span>
-                  )}
-                  {product.specifications?.continuous_drainage && (
-                    <span className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-700">
-                      Continuous drainage
-                    </span>
-                  )}
-                  {product.specifications?.air_purification && (
-                    <span className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-700">
-                      Air purification
-                    </span>
-                  )}
+                <div className="space-y-4 p-6">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#2563eb]">
+                      {product.brand?.name ?? "Brand"}
+                    </p>
+                    <h3 className="mt-3 text-xl font-semibold text-slate-950">{product.name}</h3>
+                    <p className="text-sm text-slate-600">Model {product.model}</p>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-3xl bg-slate-50 p-4">
+                      <p className="text-sm font-semibold text-slate-950">Extraction</p>
+                      <p className="mt-2 text-lg font-semibold text-slate-900">
+                        {product.specifications?.extraction_litres_per_day != null
+                          ? `${product.specifications.extraction_litres_per_day} L/day`
+                          : "N/A"}
+                      </p>
+                    </div>
+                    <div className="rounded-3xl bg-slate-50 p-4">
+                      <p className="text-sm font-semibold text-slate-950">Noise</p>
+                      <p className="mt-2 text-lg font-semibold text-slate-900">
+                        {product.specifications?.noise_db != null
+                          ? `${product.specifications.noise_db} dB`
+                          : "N/A"}
+                      </p>
+                    </div>
+                    <div className="rounded-3xl bg-slate-50 p-4">
+                      <p className="text-sm font-semibold text-slate-950">Power</p>
+                      <p className="mt-2 text-lg font-semibold text-slate-900">
+                        {product.specifications?.power_watts != null
+                          ? `${product.specifications.power_watts} W`
+                          : "N/A"}
+                      </p>
+                    </div>
+                    <div className="rounded-3xl bg-slate-50 p-4">
+                      <p className="text-sm font-semibold text-slate-950">Type</p>
+                      <p className="mt-2 text-lg font-semibold text-slate-900">
+                        {product.specifications?.dehumidifier_type ?? "N/A"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    {product.specifications?.laundry_mode && (
+                      <span className="badge-pill">Laundry mode</span>
+                    )}
+                    {product.specifications?.continuous_drainage && (
+                      <span className="badge-pill">Continuous drainage</span>
+                    )}
+                    {product.specifications?.air_purification && (
+                      <span className="badge-pill">Air purification</span>
+                    )}
+                  </div>
+
+                  <div className="space-y-3">
+                    <button
+                      type="button"
+                      onClick={() => selectProduct(product.slug)}
+                      aria-pressed={selected.includes(product.slug)}
+                      className={`inline-flex h-12 w-full items-center justify-center rounded-full border px-4 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563eb] focus-visible:ring-offset-2 ${
+                        selected.includes(product.slug)
+                          ? "border-[#2563eb] bg-[#eff6ff] text-slate-950"
+                          : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
+                      }`}
+                    >
+                      {selected.includes(product.slug) ? "Added to compare" : "Add to compare"}
+                    </button>
+
+                    <Link
+                      href={`/products/${product.slug}`}
+                      className="inline-flex h-12 w-full items-center justify-center rounded-full border border-[#2563eb] bg-[#2563eb] px-4 text-sm font-semibold text-white transition hover:bg-[#1d4ed8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563eb] focus-visible:ring-offset-2"
+                    >
+                      View Product
+                    </Link>
+                  </div>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={() => selectProduct(product.slug)}
-                  aria-pressed={selected.includes(product.slug)}
-                  className={`inline-flex w-full items-center justify-center rounded-full border px-4 py-3 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563eb] focus-visible:ring-offset-2 ${
-                    selected.includes(product.slug)
-                      ? "border-[#2563eb] bg-[#eff6ff] text-slate-950"
-                      : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
-                  }`}
-                >
-                  {selected.includes(product.slug) ? "Added to compare" : "Add to compare"}
-                </button>
-
-                <Link
-                  href={`/products/${product.slug}`}
-                  className="inline-flex w-full items-center justify-center rounded-full border border-[#2563eb] bg-[#2563eb] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#1d4ed8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563eb] focus-visible:ring-offset-2"
-                >
-                  View Product
-                </Link>
-              </div>
-            </article>
+              </article>
             );
           })}
         </div>

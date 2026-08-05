@@ -7,6 +7,78 @@ import { supabase } from "@/lib/supabase";
 
 import type { ProductWithBrand } from "@/lib/types";
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
+function buildJsonLd(product: ProductWithBrand, canonicalUrl: string) {
+  const imageUrl = product.image_url ? product.image_url : undefined;
+  const specs = product.specifications ?? {};
+  const additionalProperties = [
+    specs.extraction_litres_per_day != null && {
+      "@type": "PropertyValue",
+      name: "Extraction rate",
+      value: `${specs.extraction_litres_per_day} L/day`,
+    },
+    specs.noise_db != null && {
+      "@type": "PropertyValue",
+      name: "Noise level",
+      value: `${specs.noise_db} dB`,
+    },
+    specs.power_watts != null && {
+      "@type": "PropertyValue",
+      name: "Power consumption",
+      value: `${specs.power_watts} W`,
+    },
+    specs.tank_capacity_litres != null && {
+      "@type": "PropertyValue",
+      name: "Tank capacity",
+      value: `${specs.tank_capacity_litres} L`,
+    },
+    specs.dehumidifier_type && {
+      "@type": "PropertyValue",
+      name: "Dehumidifier type",
+      value: specs.dehumidifier_type,
+    },
+  ].filter(Boolean);
+
+  return JSON.stringify([
+    {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: product.name,
+      brand: product.brand?.name ? { "@type": "Brand", name: product.brand.name } : undefined,
+      description: buildDescription(product),
+      url: canonicalUrl,
+      image: imageUrl ? [imageUrl] : undefined,
+      sku: product.model || undefined,
+      additionalProperty: additionalProperties.length > 0 ? additionalProperties : undefined,
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Home",
+          item: siteUrl,
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "Dehumidifiers",
+          item: `${siteUrl}/#products`,
+        },
+        {
+          "@type": "ListItem",
+          position: 3,
+          name: product.name,
+          item: canonicalUrl,
+        },
+      ],
+    },
+  ]);
+}
+
 async function getProductBySlug(slug: string) {
   const { data, error } = await supabase
     .from("products")
@@ -96,17 +168,43 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   }
 
   if (!product) {
+    const canonicalUrl = `${siteUrl}/products/${slug}`;
     return {
       title: "Product not found | SmartCompare",
       description: "The requested dehumidifier product could not be found.",
-      alternates: { canonical: `/products/${slug}` },
+      openGraph: {
+        title: "Product not found | SmartCompare",
+        description: "The requested dehumidifier product could not be found.",
+        url: canonicalUrl,
+        type: "website",
+      },
+      twitter: {
+        card: "summary",
+        title: "Product not found | SmartCompare",
+        description: "The requested dehumidifier product could not be found.",
+      },
+      alternates: { canonical: canonicalUrl },
     };
   }
+
+  const canonicalUrl = `${siteUrl}/products/${product.slug}`;
 
   return {
     title: `${product.name} Specifications & Comparison | SmartCompare`,
     description: buildDescription(product),
-    alternates: { canonical: `/products/${product.slug}` },
+    openGraph: {
+      title: `${product.name} Specifications & Comparison | SmartCompare`,
+      description: buildDescription(product),
+      url: canonicalUrl,
+      type: "website",
+      images: product.image_url ? [{ url: product.image_url, alt: `${product.brand?.name ?? ""} ${product.name}`.trim() }] : undefined,
+    },
+    twitter: {
+      card: "summary",
+      title: `${product.name} Specifications & Comparison | SmartCompare`,
+      description: buildDescription(product),
+    },
+    alternates: { canonical: canonicalUrl },
   };
 }
 
@@ -130,6 +228,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     { label: "Air purification", enabled: specs?.air_purification, description: "Includes an air-purification function." },
   ].filter((feature) => feature.enabled);
 
+  const canonicalUrl = `${siteUrl}/products/${product.slug}`;
   const summaryText = buildSummary(product);
   const suitableForItems = product.suitable_for ?? [];
   const prosItems = product.pros ?? [];
@@ -139,6 +238,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
   return (
     <main className="bg-[#f8fafc] text-slate-950">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: buildJsonLd(product, canonicalUrl) }}
+      />
       <div className="page-container section-spacing">
         <nav className="mb-6 text-sm text-slate-600" aria-label="Breadcrumb">
           <Link href="/" className="font-medium text-slate-700 hover:text-slate-900">
@@ -249,80 +352,81 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               </div>
             )}
 
-            {hasSupplementaryCards && (
-              <div className="rounded-[2rem] border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#2563eb]">
-                  Product insights
-                </p>
-                <div className="mt-6 grid gap-4 sm:grid-cols-3">
-                  {suitableForItems.length > 0 && (
-                    <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-5">
-                      <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#2563eb]">
-                        Suitable for
-                      </p>
-                      <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-700">
-                        {suitableForItems.map((item, index) => (
-                          <li key={index} className="flex gap-3">
-                            <span className="mt-1 text-slate-400">•</span>
-                            <span>{item}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {prosItems.length > 0 && (
-                    <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-5">
-                      <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#2563eb]">
-                        Pros
-                      </p>
-                      <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-700">
-                        {prosItems.map((item, index) => (
-                          <li key={index} className="flex gap-3">
-                            <span className="mt-1 text-emerald-600">✓</span>
-                            <span>{item}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {consItems.length > 0 && (
-                    <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-5">
-                      <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#2563eb]">
-                        Cons
-                      </p>
-                      <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-700">
-                        {consItems.map((item, index) => (
-                          <li key={index} className="flex gap-3">
-                            <span className="mt-1 text-rose-600">✕</span>
-                            <span>{item}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {product.manufacturer_url && (
-              <div className="rounded-[2rem] border border-slate-200 bg-slate-50 p-6 sm:p-8">
-                <p className="text-sm text-slate-700">
-                  Check the manufacturer&apos;s website for the latest product information, warranty details and availability.
-                </p>
-                <a
-                  href={product.manufacturer_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-[#2563eb] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#1d4ed8]"
-                >
-                  View on Manufacturer Website
-                </a>
-              </div>
-            )}
           </div>
         </div>
+
+        {hasSupplementaryCards && (
+          <div className="mt-10 rounded-[2rem] border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#2563eb]">
+              Product insights
+            </p>
+            <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {suitableForItems.length > 0 && (
+                <div className="min-h-[16rem] rounded-[1.75rem] border border-slate-200 bg-slate-50 p-6">
+                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#2563eb]">
+                    Suitable for
+                  </p>
+                  <ul className="mt-5 space-y-4 text-sm leading-7 text-slate-700">
+                    {suitableForItems.map((item, index) => (
+                      <li key={index} className="flex gap-3">
+                        <span className="mt-1 text-slate-400">•</span>
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {prosItems.length > 0 && (
+                <div className="min-h-[16rem] rounded-[1.75rem] border border-slate-200 bg-slate-50 p-6">
+                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#2563eb]">
+                    Pros
+                  </p>
+                  <ul className="mt-5 space-y-4 text-sm leading-7 text-slate-700">
+                    {prosItems.map((item, index) => (
+                      <li key={index} className="flex gap-3">
+                        <span className="mt-1 text-emerald-600">✓</span>
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {consItems.length > 0 && (
+                <div className="min-h-[16rem] rounded-[1.75rem] border border-slate-200 bg-slate-50 p-6">
+                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#2563eb]">
+                    Cons
+                  </p>
+                  <ul className="mt-5 space-y-4 text-sm leading-7 text-slate-700">
+                    {consItems.map((item, index) => (
+                      <li key={index} className="flex gap-3">
+                        <span className="mt-1 text-rose-600">✕</span>
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {product.manufacturer_url && (
+          <div className="mt-6 rounded-[2rem] border border-slate-200 bg-slate-50 p-6 sm:p-8">
+            <p className="text-sm text-slate-700">
+              Check the manufacturer&apos;s website for the latest product information, warranty details and availability.
+            </p>
+            <a
+              href={product.manufacturer_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-[#2563eb] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#1d4ed8]"
+            >
+              View on Manufacturer Website
+            </a>
+          </div>
+        )}
 
         <div className="mt-10 rounded-[2rem] border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

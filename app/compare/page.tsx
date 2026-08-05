@@ -5,6 +5,8 @@ import ProductImage from "@/components/ProductImage";
 import ComparisonRunningCosts from "@/components/ComparisonRunningCosts";
 import type { ProductWithBrand } from "@/lib/types";
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
 type CompareSearchParams = {
   products?: string;
 };
@@ -94,10 +96,24 @@ async function getProductsBySlugs(slugs: string[]) {
 export async function generateMetadata({ searchParams }: { searchParams: Promise<CompareSearchParams> }): Promise<Metadata> {
   const { products } = await searchParams;
   const slugs = products?.split(",").map((slug) => slug.trim()).filter(Boolean) ?? [];
+  const canonicalUrl = `${siteUrl}/compare`;
+
   if (slugs.length < 2) {
     return {
       title: "Compare Dehumidifiers Side by Side | SmartCompare",
       description: "Compare factual dehumidifier specifications including extraction rate, noise, power consumption, tank capacity and features.",
+      openGraph: {
+        title: "Compare Dehumidifiers Side by Side | SmartCompare",
+        description: "Compare factual dehumidifier specifications including extraction rate, noise, power consumption, tank capacity and features.",
+        url: canonicalUrl,
+        type: "website",
+      },
+      twitter: {
+        card: "summary",
+        title: "Compare Dehumidifiers Side by Side | SmartCompare",
+        description: "Compare factual dehumidifier specifications including extraction rate, noise, power consumption, tank capacity and features.",
+      },
+      alternates: { canonical: canonicalUrl },
       robots: { index: false, follow: true },
     };
   }
@@ -112,6 +128,18 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
     return {
       title: "Compare Dehumidifiers Side by Side | SmartCompare",
       description: "Compare factual dehumidifier specifications including extraction rate, noise, power consumption, tank capacity and features.",
+      openGraph: {
+        title: "Compare Dehumidifiers Side by Side | SmartCompare",
+        description: "Compare factual dehumidifier specifications including extraction rate, noise, power consumption, tank capacity and features.",
+        url: canonicalUrl,
+        type: "website",
+      },
+      twitter: {
+        card: "summary",
+        title: "Compare Dehumidifiers Side by Side | SmartCompare",
+        description: "Compare factual dehumidifier specifications including extraction rate, noise, power consumption, tank capacity and features.",
+      },
+      alternates: { canonical: canonicalUrl },
       robots: { index: false, follow: true },
     };
   }
@@ -119,6 +147,18 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
   return {
     title: "Compare Dehumidifiers Side by Side | SmartCompare",
     description: "Compare factual dehumidifier specifications including extraction rate, noise, power consumption, tank capacity and features.",
+    openGraph: {
+      title: "Compare Dehumidifiers Side by Side | SmartCompare",
+      description: "Compare factual dehumidifier specifications including extraction rate, noise, power consumption, tank capacity and features.",
+      url: canonicalUrl,
+      type: "website",
+    },
+    twitter: {
+      card: "summary",
+      title: "Compare Dehumidifiers Side by Side | SmartCompare",
+      description: "Compare factual dehumidifier specifications including extraction rate, noise, power consumption, tank capacity and features.",
+    },
+    alternates: { canonical: canonicalUrl },
   };
 }
 
@@ -218,9 +258,9 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
             <ComparisonRunningCosts products={orderedProducts} />
           </div>
           <div className="overflow-x-auto rounded-[2rem] border border-slate-200 bg-white shadow-sm">
-            <div className="min-w-[900px]">
-              <div className="grid min-w-full grid-cols-[1.5fr_repeat(4,1fr)] gap-0 border-b border-slate-200 bg-slate-50 px-4 py-4 text-sm uppercase tracking-[0.18em] text-slate-600 sm:grid-cols-[1.7fr_repeat(4,1fr)]">
-                <div className="py-2 font-semibold text-slate-950">Specification</div>
+            <div className="min-w-[calc(220px+4*240px)]">
+              <div className="grid min-w-full grid-cols-[minmax(220px,1.7fr)_repeat(4,minmax(240px,1fr))] gap-0 border-b border-slate-200 bg-slate-50 px-4 py-4 text-sm uppercase tracking-[0.18em] text-slate-600">
+                <div className="sticky left-0 top-0 z-20 border-r border-slate-200 bg-slate-50 py-2">Specification</div>
                 {orderedProducts.map((product) => (
                   <div key={product.slug} className="border-l border-slate-200 px-4 py-2">
                     <p className="truncate font-semibold text-slate-950">{product.name}</p>
@@ -229,11 +269,11 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
                 ))}
               </div>
 
-              <div className="grid min-w-full grid-cols-[1.5fr_repeat(4,1fr)] gap-0 px-4 py-4 text-sm text-slate-700 sm:grid-cols-[1.7fr_repeat(4,1fr)]">
-                <div className="border-b border-slate-200 py-4 pr-4 font-semibold text-slate-950">Product image</div>
+              <div className="grid min-w-full grid-cols-[minmax(220px,1.7fr)_repeat(4,minmax(240px,1fr))] gap-0 px-4 py-4 text-sm text-slate-700">
+                <div className="sticky left-0 top-0 z-10 border-r border-slate-200 bg-white py-4 pr-4 font-semibold text-slate-950">Product image</div>
                 {orderedProducts.map((product) => (
                   <div key={`${product.slug}-image`} className="border-l border-b border-slate-200 px-4 py-4">
-                    <div className="mx-auto h-40 w-full max-w-[12rem] overflow-hidden rounded-[1.5rem] bg-slate-100">
+                    <div className="mx-auto h-40 w-full max-w-[14rem] overflow-hidden rounded-[1.5rem] bg-slate-100">
                       <ProductImage src={product.image_url ?? undefined} alt={product.name} sizes="200px" />
                     </div>
                   </div>
@@ -243,8 +283,8 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
               {rows.map((row) => {
                 const rowKey = row.label.toLowerCase().replace(/\s+/g, "-");
                 return (
-                  <div key={rowKey} className="grid min-w-full grid-cols-[1.5fr_repeat(4,1fr)] gap-0 border-t border-slate-200 px-4 py-4 text-sm sm:grid-cols-[1.7fr_repeat(4,1fr)]">
-                    <div className="pr-4 font-semibold text-slate-950">{row.label}</div>
+                  <div key={rowKey} className="grid min-w-full grid-cols-[minmax(220px,1.7fr)_repeat(4,minmax(240px,1fr))] gap-0 border-t border-slate-200 px-4 py-4 text-sm">
+                    <div className="sticky left-0 z-10 border-r border-slate-200 bg-white pr-4 font-semibold text-slate-950">{row.label}</div>
                     {row.values.map((value, index) => {
                       const highlightClass =
                         (row.label === "Extraction rate" && highlights.extraction.has(index)) ||
@@ -285,8 +325,8 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
                 );
               })}
 
-              <div className="grid min-w-full grid-cols-[1.5fr_repeat(4,1fr)] gap-0 border-t border-slate-200 px-4 py-4 text-sm sm:grid-cols-[1.7fr_repeat(4,1fr)]">
-                <div className="pr-4 font-semibold text-slate-950">Manufacturer link</div>
+              <div className="grid min-w-full grid-cols-[minmax(220px,1.7fr)_repeat(4,minmax(240px,1fr))] gap-0 border-t border-slate-200 px-4 py-4 text-sm">
+                <div className="sticky left-0 z-10 border-r border-slate-200 bg-white pr-4 font-semibold text-slate-950">Manufacturer link</div>
                 {orderedProducts.map((product) => (
                   <div key={`${product.slug}-link`} className="border-l border-slate-200 px-4 py-4">
                     {product.manufacturer_url ? (

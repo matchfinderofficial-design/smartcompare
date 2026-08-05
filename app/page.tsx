@@ -1,7 +1,29 @@
+import type { Metadata } from "next";
 import ProductCatalogue from "@/components/ProductCatalogue";
 import Link from "next/link";
 import type { ProductWithBrand } from "@/lib/types";
 import { supabase } from "@/lib/supabase";
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
+export const metadata: Metadata = {
+  title: "SmartCompare | Find the right dehumidifier",
+  description: "Compare UK dehumidifiers using published manufacturer specs for extraction, noise, power, tank capacity and features.",
+  openGraph: {
+    title: "SmartCompare | Find the right dehumidifier",
+    description: "Compare UK dehumidifiers using published manufacturer specs for extraction, noise, power, tank capacity and features.",
+    url: siteUrl,
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "SmartCompare | Find the right dehumidifier",
+    description: "Compare UK dehumidifiers using published manufacturer specs for extraction, noise, power, tank capacity and features.",
+  },
+  alternates: {
+    canonical: siteUrl,
+  },
+};
 
 async function getActiveProducts() {
   const { data, error } = await supabase

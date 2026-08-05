@@ -67,14 +67,16 @@ export default function ProductImage({
   }
 
   return (
-    <Image
-      src={safeSrc}
-      alt={alt || "Product image"}
-      sizes={sizes}
-      fill
-      className={`object-contain ${className ?? ""}`}
-      onError={() => setHasError(true)}
-      {...rest}
-    />
+    <div className={`relative h-full w-full ${className ?? ""}`}>
+      <Image
+        src={safeSrc}
+        alt={alt || "Product image"}
+        sizes={sizes}
+        fill
+        className="object-contain object-center"
+        onError={() => setHasError(true)}
+        {...rest}
+      />
+    </div>
   );
 }
