@@ -2,7 +2,7 @@ import getSupabaseAdmin from "../lib/supabase-admin";
 
 const supabaseAdmin = getSupabaseAdmin();
 const DEFAULT_LIMIT = 4;
-const GEMINI_MODEL = "gemini-2.5-flash";
+const GEMINI_MODEL = "gemini-3.6-flash";
 
 type ProductRow = {
   id: number;
