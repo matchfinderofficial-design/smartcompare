@@ -1,8 +1,11 @@
 import getSupabaseAdmin from "../lib/supabase-admin";
 
 const supabaseAdmin = getSupabaseAdmin();
+
 const DEFAULT_LIMIT = 4;
 const GEMINI_MODEL = "gemini-3.6-flash";
+const FETCH_LIMIT = 50;
+const REQUEST_DELAY_MS = 15000;
 
 type ProductRow = {
   id: number;
@@ -32,31 +35,41 @@ const responseSchema = {
   properties: {
     short_description: {
       type: "string",
-      description: "A factual British English product summary of 50 to 80 words.",
+      description:
+        "A factual British English product summary of 50 to 80 words.",
     },
     full_description: {
       type: "string",
-      description: "A factual British English product description of 120 to 220 words.",
+      description:
+        "A factual British English product description of 120 to 220 words.",
     },
     suitable_for: {
       type: "array",
       maxItems: 4,
-      items: { type: "string" },
+      items: {
+        type: "string",
+      },
     },
     key_features: {
       type: "array",
       maxItems: 6,
-      items: { type: "string" },
+      items: {
+        type: "string",
+      },
     },
     pros: {
       type: "array",
       maxItems: 5,
-      items: { type: "string" },
+      items: {
+        type: "string",
+      },
     },
     cons: {
       type: "array",
       maxItems: 4,
-      items: { type: "string" },
+      items: {
+        type: "string",
+      },
     },
   },
   required: [
@@ -66,11 +79,13 @@ const responseSchema = {
     "key_features",
     "pros",
     "cons",
-  ]
+  ],
 };
 
 function isPlaceholder(value?: string | null): boolean {
-  if (!value) return true;
+  if (!value) {
+    return true;
+  }
 
   return (
     value.startsWith("A concise description of ") ||
@@ -80,6 +95,10 @@ function isPlaceholder(value?: string | null): boolean {
 
 function arrayNeedsContent(value?: string[] | null): boolean {
   return !Array.isArray(value) || value.length === 0;
+}
+
+function sleep(milliseconds: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
 async function callGeminiForProduct(
@@ -130,7 +149,11 @@ ${JSON.stringify(factualInput, null, 2)}
       contents: [
         {
           role: "user",
-          parts: [{ text: prompt }],
+          parts: [
+            {
+              text: prompt,
+            },
+          ],
         },
       ],
       generationConfig: {
@@ -143,6 +166,7 @@ ${JSON.stringify(factualInput, null, 2)}
 
   if (!response.ok) {
     const errorBody = await response.text();
+
     throw new Error(
       `Gemini API returned HTTP ${response.status}: ${errorBody.slice(0, 500)}`
     );
@@ -150,8 +174,7 @@ ${JSON.stringify(factualInput, null, 2)}
 
   const apiResponse = await response.json();
 
-  const text =
-    apiResponse?.candidates?.[0]?.content?.parts?.[0]?.text;
+  const text = apiResponse?.candidates?.[0]?.content?.parts?.[0]?.text;
 
   if (!text || typeof text !== "string") {
     throw new Error("Gemini returned no usable structured response.");
@@ -197,7 +220,7 @@ async function main() {
     )
     .eq("active", true)
     .order("id")
-    .limit(limit);
+    .limit(FETCH_LIMIT);
 
   if (productError) {
     throw new Error(`Could not load products: ${productError.message}`);
@@ -211,6 +234,7 @@ async function main() {
   let completed = 0;
   let skipped = 0;
   let failed = 0;
+  let attempted = 0;
 
   for (const product of products as ProductRow[]) {
     const needsContent =
@@ -227,10 +251,16 @@ async function main() {
       continue;
     }
 
+    if (attempted >= limit) {
+      break;
+    }
+
+    attempted++;
+
     try {
       console.log(`Generating content for ${product.slug}`);
 
-      await supabaseAdmin
+      const { error: processingError } = await supabaseAdmin
         .from("products")
         .update({
           automation_status: "processing",
@@ -238,6 +268,12 @@ async function main() {
           last_automated_at: new Date().toISOString(),
         })
         .eq("id", product.id);
+
+      if (processingError) {
+        throw new Error(
+          `Could not mark product as processing: ${processingError.message}`
+        );
+      }
 
       const generated = await callGeminiForProduct(product);
 
@@ -289,8 +325,9 @@ async function main() {
 
       completed++;
 
-      // Small delay to reduce API-rate pressure.
-      await new Promise((resolve) => setTimeout(resolve, 15000));
+      if (attempted < limit) {
+        await sleep(REQUEST_DELAY_MS);
+      }
     } catch (error) {
       failed++;
 
@@ -324,5 +361,6 @@ main().catch((error) => {
     "Fatal generation error:",
     error instanceof Error ? error.message : error
   );
+
   process.exitCode = 1;
 });
